@@ -2,7 +2,8 @@ import React, { useState, useEffect, Fragment } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import SignIn from './components/SignIn/SignIn';
 import UserProfile from './components/SignIn/UserProfile'; 
-import supabase from './services/supabaseClient'; // Import supabase client 
+import supabase from './services/supabaseClient'; // Import supabase client  
+import TimerInterface from './components/FocusApp/TimerInterface/TimerInterface';
 const App = () => {
   const [user, setUser] = useState(null);
 
@@ -35,6 +36,7 @@ const App = () => {
               user ? (
                 <Fragment>
                   <UserProfile user={user} />  
+                  <TimerInterface  user={user} />  
                 </Fragment>
               ) : (
                 <SignIn onSignIn={setUser} />
