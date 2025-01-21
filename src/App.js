@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Fragment } from 'react'; 
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import SignIn from './components/SignIn';
-import UserProfile from './components/UserProfile'; 
+import SignIn from './components/SignIn/SignIn';
+import UserProfile from './components/SignIn/UserProfile'; 
 import supabase from './services/supabaseClient'; // Import supabase client
 const App = () => {
   const [user, setUser] = useState(null);
