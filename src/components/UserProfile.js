@@ -1,33 +1,54 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate to redirect to SignIn page
-import supabase from '../services/supabaseClient'; // Import your supabase client
+import { useNavigate } from 'react-router-dom';
+import supabase from '../services/supabaseClient';
 
 const UserProfile = ({ user }) => {
-  const [userDetails, setUserDetails] = useState(null); // State to store user data from 'users' table
-  const navigate = useNavigate(); // Hook to navigate to different routes
+  const [userDetails, setUserDetails] = useState(null);
+  const navigate = useNavigate();
 
-  // Fetch user details from the 'users' table
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      try {
-        // Fetch the user details from the 'users' table based on the user_id
-        const { data, error } = await supabase
+  // Function to fetch or create a user in the 'focus_app.users' table
+  const fetchOrCreateUser = async () => {
+    try {
+      // Fetch user details from the focus_app.users table
+      const { data: existingUser, error: fetchError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError && fetchError.code === 'PGRST116') {
+        // If user doesn't exist, create a new user
+        const { data: newUser, error: insertError } = await supabase
           .from('users')
-          .select('*, roles(name)')  // Join roles to get the role name
-          .eq('user_id', user.id)
-          .single(); // Get single user data
+          .insert({
+            user_id: user.id,
+            full_name: user.user_metadata.full_name || user.email,
+            profile_picture_url: user.user_metadata.avatar_url, 
+          })
+          .single();
 
-        if (error) {
-          console.error('Error fetching user details:', error);
-        } else {
-          setUserDetails(data); // Set the user data to state
+        if (insertError) {
+          console.error('Error creating user:', insertError);
+          return;
         }
-      } catch (error) {
-        console.error('Error fetching user details:', error);
-      }
-    };
 
-    fetchUserDetails();
+        setUserDetails(newUser);
+      } else if (fetchError) {
+        console.error('Error fetching user details:', fetchError);
+      } else {
+        // If user exists, set user details
+        setUserDetails(existingUser);
+      }
+    } catch (error) {
+      console.error('Error in fetchOrCreateUser:', error);
+    }
+  };
+
+  // Fetch or create the user when the component mounts
+  useEffect(() => {
+    if (user) {
+      fetchOrCreateUser();
+    }
   }, [user]);
 
   // Sign out function
@@ -41,19 +62,27 @@ const UserProfile = ({ user }) => {
   };
 
   if (!userDetails) {
-    return <p>Loading user details...</p>; // Show loading message until user details are fetched
+    return <div><p>Loading user details...</p>  <button onClick={handleSignOut}>Sign Out</button></div>;
   }
 
   return (
     <div>
       <h2>Welcome, {userDetails.full_name}</h2>
-      <img src={userDetails.profile_picture_url || 'https://via.placeholder.com/150'} alt="Profile" />
-      <p><strong>Email:</strong> {user.email}</p>
-      <p><strong>Role:</strong> {userDetails.roles?.name || 'N/A'}</p> {/* Display role name from roles table */}
-      <p><strong>Status:</strong> {userDetails.status || 'Active'}</p>
+      <img
+        src={userDetails.profile_picture_url || 'https://via.placeholder.com/150'}
+        alt="Profile"
+      />
+      <p>
+        <strong>Email:</strong> {user.email}
+      </p>
+      <p>
+        <strong>Role:</strong> {userDetails.user_role}
+      </p>
+      <p>
+        <strong>Status:</strong> {userDetails.status || 'Active'}
+      </p>
 
-      {/* Sign out button */}
-      <button onClick={handleSignOut}>Sign Out</button>
+      <button onClick={handleSignOut}>Sign Out</button>   
     </div>
   );
 };
