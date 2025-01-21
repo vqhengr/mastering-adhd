@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../../services/supabaseClient';
+import {
+  Container,
+  Card,
+  CardContent,
+  Typography,
+  Avatar,
+  Grid,
+  Button,
+  CircularProgress,
+  Box,
+} from '@mui/material';
 
 const UserProfile = ({ user }) => {
   const [userDetails, setUserDetails] = useState(null);
@@ -23,7 +34,7 @@ const UserProfile = ({ user }) => {
           .insert({
             user_id: user.id,
             full_name: user.user_metadata.full_name || user.email,
-            profile_picture_url: user.user_metadata.avatar_url, 
+            profile_picture_url: user.user_metadata.avatar_url,
           })
           .single();
 
@@ -62,28 +73,56 @@ const UserProfile = ({ user }) => {
   };
 
   if (!userDetails) {
-    return <div><p>Loading user details...</p>  <button onClick={handleSignOut}>Sign Out</button></div>;
+    return (
+      <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh">
+        <CircularProgress />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Loading user details...
+        </Typography>
+        <Button variant="contained" color="secondary" onClick={handleSignOut} sx={{ mt: 2 }}>
+          Sign Out
+        </Button>
+      </Box>
+    );
   }
 
   return (
-    <div>
-      <h2>Welcome, {userDetails.full_name}</h2>
-      <img
-        src={userDetails.profile_picture_url || 'https://via.placeholder.com/150'}
-        alt="Profile"
-      />
-      <p>
-        <strong>Email:</strong> {user.email}
-      </p>
-      <p>
-        <strong>Role:</strong> {userDetails.user_role}
-      </p>
-      <p>
-        <strong>Status:</strong> {userDetails.status || 'Active'}
-      </p>
-
-      <button onClick={handleSignOut}>Sign Out</button>   
-    </div>
+    <Container maxWidth="sm" sx={{ mt: 5 }}>
+      <Card>
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} display="flex" justifyContent="center">
+              <Avatar
+                src={userDetails.profile_picture_url || 'https://via.placeholder.com/150'}
+                alt="Profile"
+                sx={{ width: 120, height: 120 }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="h5" align="center" gutterBottom>
+                Welcome, {userDetails.full_name}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body1" align="center">
+                <strong>Email:</strong> {user.email}
+              </Typography>
+              <Typography variant="body1" align="center">
+                <strong>Role:</strong> {userDetails.user_role || 'User'}
+              </Typography>
+              <Typography variant="body1" align="center">
+                <strong>Status:</strong> {userDetails.status || 'Active'}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} display="flex" justifyContent="center">
+              <Button variant="contained" color="primary" onClick={handleSignOut}>
+                Sign Out
+              </Button>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+    </Container>
   );
 };
 
